@@ -9,59 +9,7 @@
 
 <title>Scanner EAG</title>
 
-<script type="module">
-
-import QrScanner from "https://unpkg.com/qr-scanner@1.4.2/qr-scanner.min.js";
-
-window.addEventListener("load",()=>{
-
-const video=document.getElementById("video");
-
-const status=document.getElementById("status");
-
-const scanner=new QrScanner(
-
-video,
-
-result=>{
-
-status.innerHTML="✅ "+result.data;
-
-if(window.opener){
-
-window.opener.postMessage(
-
-{
-
-matricula:result.data
-
-},
-
-"*"
-
-);
-
-}
-
-},
-
-{
-
-highlightScanRegion:true,
-
-highlightCodeOutline:true,
-
-returnDetailedScanResult:true
-
-}
-
-);
-
-scanner.start();
-
-});
-
-</script>
+<script src="https://unpkg.com/html5-qrcode"></script>
 
 <style>
 
@@ -73,7 +21,7 @@ padding:20px;
 
 font-family:Arial;
 
-background:#f4f4f4;
+background:#f5f5f5;
 
 text-align:center;
 
@@ -81,19 +29,17 @@ text-align:center;
 
 h1{
 
-color:#1976D2;
+color:#1976d2;
 
 }
 
-video{
+#reader{
 
 width:100%;
 
 max-width:500px;
 
-border-radius:12px;
-
-border:3px solid #1976D2;
+margin:auto;
 
 }
 
@@ -101,11 +47,11 @@ border:3px solid #1976D2;
 
 margin-top:20px;
 
-font-size:24px;
+font-size:22px;
 
 font-weight:bold;
 
-color:green;
+color:#2e7d32;
 
 }
 
@@ -115,19 +61,119 @@ color:green;
 
 <body>
 
-<h1>
+<h1>📷 Scanner EAG</h1>
 
-📷 Scanner QR Code
-
-</h1>
-
-<video id="video"></video>
+<div id="reader"></div>
 
 <div id="status">
 
 Aguardando leitura...
 
 </div>
+
+<audio id="bip">
+
+<source src="https://actions.google.com/sounds/v1/cartoon/pop.ogg">
+
+</audio>
+
+<script>
+
+let ultimoCodigo="";
+
+let ultimoTempo=0;
+
+const scanner=new Html5QrcodeScanner(
+
+"reader",
+
+{
+
+fps:10,
+
+qrbox:250,
+
+rememberLastUsedCamera:true
+
+},
+
+false
+
+);
+
+scanner.render(
+
+function(decodedText){
+
+const agora=Date.now();
+
+if(
+
+decodedText==ultimoCodigo &&
+
+agora-ultimoTempo<5000
+
+){
+
+return;
+
+}
+
+ultimoCodigo=decodedText;
+
+ultimoTempo=agora;
+
+document.getElementById(
+
+"bip"
+
+).play();
+
+document.getElementById(
+
+"status"
+
+).innerHTML=
+
+"✅ "+decodedText;
+
+if(window.opener){
+
+window.opener.postMessage(
+
+{
+
+matricula:decodedText
+
+},
+
+"*"
+
+);
+
+}
+
+setTimeout(function(){
+
+document.getElementById(
+
+"status"
+
+).innerHTML=
+
+"Aguardando leitura...";
+
+},1200);
+
+},
+
+function(error){
+
+}
+
+);
+
+</script>
 
 </body>
 
