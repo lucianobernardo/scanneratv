@@ -17,7 +17,7 @@ margin:0;
 
 padding:20px;
 
-font-family:Arial;
+font-family:Arial,sans-serif;
 
 background:#eef3f8;
 
@@ -28,6 +28,8 @@ text-align:center;
 h1{
 
 color:#1565c0;
+
+margin-bottom:20px;
 
 }
 
@@ -49,15 +51,17 @@ box-shadow:0 4px 15px rgba(0,0,0,.2);
 
 margin-top:20px;
 
-padding:15px;
+padding:18px;
 
 font-size:22px;
 
 font-weight:bold;
 
-border-radius:10px;
+border-radius:12px;
 
 background:white;
+
+transition:.3s;
 
 }
 
@@ -66,14 +70,6 @@ background:white;
 background:#dcedc8;
 
 color:#2e7d32;
-
-}
-
-.erro{
-
-background:#ffcdd2;
-
-color:#b71c1c;
 
 }
 
@@ -93,11 +89,11 @@ color:#b71c1c;
 
 <div id="status">
 
-Abrindo câmera...
+📷 Abrindo câmera...
 
 </div>
 
-<audio id="bip">
+<audio id="bip" preload="auto">
 
 <source src="https://actions.google.com/sounds/v1/cartoon/pop.ogg">
 
@@ -105,41 +101,25 @@ Abrindo câmera...
 
 <script type="module">
 
-import QrScanner from
+import QrScanner from "https://unpkg.com/qr-scanner@1.4.2/qr-scanner.min.js";
 
-"https://unpkg.com/qr-scanner@1.4.2/qr-scanner.min.js";
+QrScanner.WORKER_PATH="https://unpkg.com/qr-scanner@1.4.2/qr-scanner-worker.min.js";
 
-QrScanner.WORKER_PATH=
+const video=document.getElementById("video");
 
-"https://unpkg.com/qr-scanner@1.4.2/qr-scanner-worker.min.js";
+const status=document.getElementById("status");
 
-const API=
-
-"https://script.google.com/macros/s/AKfycbwmOQ-a5fcGl0D7CFqWzYIKFvk_jDmf0FKVxwHk_nYy3ySTZnwCECKYRQ6FTYpxF4Zp/exec";
-
-const video=
-
-document.getElementById("video");
-
-const status=
-
-document.getElementById("status");
-
-const bip=
-
-document.getElementById("bip");
+const bip=document.getElementById("bip");
 
 let ultimoCodigo="";
 
 let ultimoTempo=0;
 
-const scanner=
-
-new QrScanner(
+const scanner=new QrScanner(
 
 video,
 
-async(resultado)=>{
+function(resultado){
 
 const codigo=resultado.data;
 
@@ -147,7 +127,7 @@ const agora=Date.now();
 
 if(
 
-codigo==ultimoCodigo &&
+codigo===ultimoCodigo &&
 
 agora-ultimoTempo<5000
 
@@ -165,89 +145,27 @@ bip.currentTime=0;
 
 bip.play();
 
-status.className="";
-
-status.innerHTML=
-
-"Registrando...";
-
-try{
-
-const resposta=
-
-await fetch(
-
-API,
-
-{
-
-method:"POST",
-
-headers:{
-
-"Content-Type":"application/json"
-
-},
-
-body:JSON.stringify({
-
-acao:"registrar",
-
-matricula:codigo,
-
-atividades:[
-
-"7A004"
-
-]
-
-})
-
-}
-
-);
-
-const ret=
-
-await resposta.json();
-
-if(ret.sucesso){
-
 status.className="ok";
 
 status.innerHTML=
 
-"✅ "+
+"✅ Matrícula lida<br><br>"+
 
-ret.nome+
+codigo;
 
-"<br>"+
+if(window.opener){
 
-ret.turma+
+window.opener.postMessage(
 
-"<br><br>"+
+{
 
-ret.mensagem;
+matricula:codigo
 
-}else{
+},
 
-status.className="erro";
+"*"
 
-status.innerHTML=
-
-"⚠️ "+
-
-ret.mensagem;
-
-}
-
-}catch(e){
-
-status.className="erro";
-
-status.innerHTML=
-
-"Erro de comunicação.";
+);
 
 }
 
@@ -257,9 +175,9 @@ status.className="";
 
 status.innerHTML=
 
-"📷 Aguardando leitura...";
+"📷 Aguardando próxima leitura...";
 
-},2000);
+},1000);
 
 },
 
@@ -277,7 +195,19 @@ returnDetailedScanResult:true
 
 );
 
-scanner.start();
+scanner.start().then(function(){
+
+status.innerHTML=
+
+"📷 Aguardando próxima leitura...";
+
+}).catch(function(){
+
+status.innerHTML=
+
+"❌ Não foi possível acessar a câmera.";
+
+});
 
 </script>
 
