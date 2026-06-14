@@ -7,7 +7,7 @@
 
 <meta name="viewport" content="width=device-width,initial-scale=1">
 
-<title>Leitor de QR Code</title>
+<title>Leitor de QR Code - EAG</title>
 
 <style>
 
@@ -52,6 +52,27 @@ background:#ffcdd2;
 color:#b71c1c;
 }
 
+#btnFechar{
+
+margin-top:20px;
+width:100%;
+max-width:500px;
+padding:15px;
+font-size:20px;
+background:#c62828;
+color:white;
+border:none;
+border-radius:12px;
+cursor:pointer;
+
+}
+
+#btnFechar:hover{
+
+background:#b71c1c;
+
+}
+
 </style>
 
 </head>
@@ -72,8 +93,16 @@ color:#b71c1c;
 
 </div>
 
+<button id="btnFechar">
+
+❌ Fechar Scanner
+
+</button>
+
 <audio id="bip" preload="auto">
+
 <source src="https://actions.google.com/sounds/v1/cartoon/pop.ogg">
+
 </audio>
 
 <script type="module">
@@ -83,10 +112,15 @@ import QrScanner from "https://unpkg.com/qr-scanner@1.4.2/qr-scanner.min.js";
 QrScanner.WORKER_PATH="https://unpkg.com/qr-scanner@1.4.2/qr-scanner-worker.min.js";
 
 const video=document.getElementById("video");
+
 const status=document.getElementById("status");
+
 const bip=document.getElementById("bip");
 
+const btnFechar=document.getElementById("btnFechar");
+
 let scanner;
+
 let bloqueado=false;
 
 scanner=new QrScanner(
@@ -106,6 +140,7 @@ bloqueado=true;
 const codigo=resultado.data;
 
 bip.currentTime=0;
+
 bip.play().catch(()=>{});
 
 status.className="ok";
@@ -118,15 +153,7 @@ codigo+
 
 "<br><br>⏳ Aguarde 2 segundos...";
 
-/*************************************************
- * PAUSA O SCANNER
- *************************************************/
-
 scanner.stop();
-
-/*************************************************
- * ENVIA PARA O APPS SCRIPT
- *************************************************/
 
 if(window.opener){
 
@@ -144,9 +171,21 @@ matricula:codigo
 
 }
 
-/*************************************************
- * REINICIA EM 2 SEGUNDOS
- *************************************************/
+else if(window.parent){
+
+window.parent.postMessage(
+
+{
+
+matricula:codigo
+
+},
+
+"*"
+
+);
+
+}
 
 setTimeout(function(){
 
@@ -178,10 +217,6 @@ returnDetailedScanResult:true
 
 );
 
-/*************************************************
- * INICIAR
- *************************************************/
-
 scanner.start()
 
 .then(function(){
@@ -201,6 +236,60 @@ status.innerHTML=
 "❌ Erro ao abrir câmera.<br><br>"+e;
 
 });
+
+/*************************************************
+ * FECHAR SCANNER
+ *************************************************/
+
+btnFechar.addEventListener(
+
+"click",
+
+async function(){
+
+try{
+
+await scanner.stop();
+
+}catch(e){}
+
+window.close();
+
+document.body.innerHTML=
+
+`
+
+<div style="
+
+padding:80px;
+
+font-family:Arial;
+
+text-align:center;
+
+">
+
+<h1>
+
+✅ Scanner encerrado
+
+</h1>
+
+<br>
+
+<p>
+
+Pode fechar esta janela.
+
+</p>
+
+</div>
+
+`;
+
+}
+
+);
 
 </script>
 
