@@ -7,39 +7,32 @@
 
 <meta name="viewport" content="width=device-width,initial-scale=1">
 
-<title>Scanner EAG</title>
+<title>Leitor de QR Code</title>
 
 <style>
 
 body{
-
 margin:0;
 padding:20px;
 font-family:Arial,sans-serif;
 background:#eef3f8;
 text-align:center;
-
 }
 
 h1{
-
 color:#1565c0;
 margin-bottom:20px;
-
 }
 
 video{
-
 width:100%;
 max-width:500px;
 border-radius:15px;
 border:4px solid #1976d2;
 box-shadow:0 4px 15px rgba(0,0,0,.2);
-
 }
 
 #status{
-
 margin-top:20px;
 padding:18px;
 font-size:22px;
@@ -47,21 +40,16 @@ font-weight:bold;
 border-radius:12px;
 background:white;
 transition:.3s;
-
 }
 
 .ok{
-
 background:#dcedc8;
 color:#2e7d32;
-
 }
 
 .erro{
-
 background:#ffcdd2;
 color:#b71c1c;
-
 }
 
 </style>
@@ -80,14 +68,12 @@ color:#b71c1c;
 
 <div id="status">
 
-📷 Aguardando leitura...
+📷 Aguardando câmera...
 
 </div>
 
 <audio id="bip" preload="auto">
-
 <source src="https://actions.google.com/sounds/v1/cartoon/pop.ogg">
-
 </audio>
 
 <script type="module">
@@ -97,18 +83,17 @@ import QrScanner from "https://unpkg.com/qr-scanner@1.4.2/qr-scanner.min.js";
 QrScanner.WORKER_PATH="https://unpkg.com/qr-scanner@1.4.2/qr-scanner-worker.min.js";
 
 const video=document.getElementById("video");
-
 const status=document.getElementById("status");
-
 const bip=document.getElementById("bip");
 
+let scanner;
 let bloqueado=false;
 
-const scanner=new QrScanner(
+scanner=new QrScanner(
 
 video,
 
-(resultado)=>{
+resultado=>{
 
 if(bloqueado){
 
@@ -121,7 +106,6 @@ bloqueado=true;
 const codigo=resultado.data;
 
 bip.currentTime=0;
-
 bip.play().catch(()=>{});
 
 status.className="ok";
@@ -130,7 +114,15 @@ status.innerHTML=
 
 "✅ Matrícula lida<br><br>"+
 
-codigo;
+codigo+
+
+"<br><br>⏳ Aguarde 2 segundos...";
+
+/*************************************************
+ * PAUSA O SCANNER
+ *************************************************/
+
+scanner.stop();
 
 /*************************************************
  * ENVIA PARA O APPS SCRIPT
@@ -153,20 +145,22 @@ matricula:codigo
 }
 
 /*************************************************
- * LIBERA NOVA LEITURA
+ * REINICIA EM 2 SEGUNDOS
  *************************************************/
 
 setTimeout(function(){
-
-bloqueado=false;
 
 status.className="";
 
 status.innerHTML=
 
-"📷 Aguardando leitura...";
+"📷 Aguardando próxima leitura...";
 
-},300);
+scanner.start();
+
+bloqueado=false;
+
+},2000);
 
 },
 
@@ -178,16 +172,14 @@ highlightScanRegion:true,
 
 highlightCodeOutline:true,
 
-returnDetailedScanResult:true,
-
-maxScansPerSecond:8
+returnDetailedScanResult:true
 
 }
 
 );
 
 /*************************************************
- * INICIAR CÂMERA
+ * INICIAR
  *************************************************/
 
 scanner.start()
@@ -196,21 +188,17 @@ scanner.start()
 
 status.innerHTML=
 
-"📷 Aguardando leitura...";
+"📷 Aguardando próxima leitura...";
 
 })
 
-.catch(function(err){
+.catch(function(e){
 
 status.className="erro";
 
 status.innerHTML=
 
-"❌ Erro ao acessar a câmera.<br><br>"+
-
-err;
-
-console.log(err);
+"❌ Erro ao abrir câmera.<br><br>"+e;
 
 });
 
